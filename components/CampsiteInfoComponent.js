@@ -23,12 +23,19 @@ const mapDispatchToProps = {
 function RenderCampsite(props) {
 
     const { campsite } = props;
+
+    const view = React.createRef(); //create a ref and store in variable called view
+
 //arrow function, as a parameter, it will take an object and the structure from it, property named dx (differential or distance of a gesture across x axis), ternary operator to return true if this value is less than -200, and false if it is not//
     const recognizeDrag = ({dx}) => (dx < -200) ? true : false;
 
 //panResponder.create API put in constant variable called panresponder //
     const panResponder = PanResponder.create({
         onStartShouldSetPanResponder: () => true,
+        onPanResponderGrant: () => {
+            view.current.rubberBand(1000)
+            .then(endState => console.log(endState.finished ? 'finished' : 'canceled'));
+        },        
         onPanResponderEnd: (e, gestureState) => { //e stands for event//
             console.log('pan responder end', gestureState);
             if (recognizeDrag(gestureState)) { //gestureState object, will return true value [if less than -200 pixels], will then cause alert//
@@ -55,11 +62,12 @@ function RenderCampsite(props) {
     });
     if (campsite) {
         return (
-            <Animatable.View 
-                animation='fadeInDown' 
-                duration={2000} 
+            <Animatable.View
+                animation='fadeInDown'
+                duration={2000}
                 delay={1000}
-                {...panResponder.panHandlers} //spread syntax to spread out pan responders panhandlers, then recombine them into one object to pass in as props for this component, which wraps around campsite information//
+                ref={view}
+                {...panResponder.panHandlers}
             >
                 <Card
                     featuredTitle={campsite.name}
