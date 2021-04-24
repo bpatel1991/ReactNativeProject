@@ -29,6 +29,8 @@ function RenderCampsite(props) {
 //arrow function, as a parameter, it will take an object and the structure from it, property named dx (differential or distance of a gesture across x axis), ternary operator to return true if this value is less than -200, and false if it is not//
     const recognizeDrag = ({dx}) => (dx < -200) ? true : false;
 
+    const recognizeComment = ({dx}) => (dx > 200) ? true : false;
+
 //panResponder.create API put in constant variable called panresponder //
     const panResponder = PanResponder.create({
         onStartShouldSetPanResponder: () => true,
@@ -57,6 +59,9 @@ function RenderCampsite(props) {
                     { cancelable: false } //can't just press out to cancel the box.//
                 );
             }
+            else if (recognizeComment(gestureState)){
+                props.onShowModal()
+            } 
             return true;
         }
     });
