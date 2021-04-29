@@ -2,8 +2,8 @@ import React, { Component } from 'react';
 import { Text, View, ScrollView, StyleSheet,
     Picker, Switch, Button, Alert, } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import * as Animatable from 'react-native-animatable'
-
+import * as Animatable from 'react-native-animatable';
+import * as Notifications from 'expo-notifications'
 
 class Reservation extends Component {
 
@@ -35,7 +35,10 @@ class Reservation extends Component {
                     },
                     {
                         text: 'OK',
-                        onPress: () => this.resetForm()
+                        onPress: () => {
+                            this.presentLocalNotification(this.state.date.toLocaleDateString('en-US'));
+                            this.resetForm();
+                        }
                     },
                 ],
         )
@@ -49,9 +52,37 @@ class Reservation extends Component {
             showCalendar: false,
         });
     }
+    //async/await: another way to handle promises- need to request permission from this device, and then wait for those permissiont obe sent back to our app ebfore we continue//
+    //async function keyword async- special function that walways reutrns a promise, parameter (date) this will be requested reservation date//
+    async presentLocalNotification(date) {
+        function sendNotification() { //function called sendNotification, no parameters//
+            Notifications.setNotificationHandler({
+                handleNotification: async () => ({
+                    shouldShowAlert: true //override default behavior (false) by using this set notification handler and setting it to true and to show alert//
+                })
+            });
+            //from Notifications API, pass this to an object that holds title and body//
+            Notifications.scheduleNotificationAsync({
+                content: {
+                    title: 'Your Campsite Reservation Search',
+                    body: `Search for ${date} requested` 
+                },
+                trigger: null //cause notification to fire immediately, can be also used to schedule notification in future, give it a time value like 30 seconds into future, repeat, etc//
+            });
+        }
+        //checking to see if we have permissions from device to send notifications at all, if we do not, wait to request permission. If we do, send notification//
+        //await keyword is JS ES8 keyword that can only be used INSIDE async function, followed by a promise//
+        let permissions = await Notifications.getPermissionsAsync();
+        if (!permissions.granted) {
+            permissions = await Notifications.requestPermissionsAsync();
+        }
+        if (permissions.granted) {
+            sendNotification();
+        }
+    }
 
     render() {
-        return (
+        return (  
             <ScrollView>
                 <Animatable.View 
                     animation='zoomIn' duration={2000} delay={1000}>
