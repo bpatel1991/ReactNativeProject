@@ -4,7 +4,7 @@ import Directory from './DirectoryComponent';
 import CampsiteInfo from './CampsiteInfoComponent';
 import About from './AboutComponent';
 import Contact from './ContactComponent';
-import { View, Platform, StyleSheet, Text, ScrollView, Image } from 'react-native';
+import { View, Platform, StyleSheet, Text, ScrollView, Image, Alert, ToastAndroid} from 'react-native';
 import { createStackNavigator } from 'react-navigation-stack';
 import { createDrawerNavigator, DrawerItems } from 'react-navigation-drawer';
 import { createAppContainer } from 'react-navigation';
@@ -16,6 +16,8 @@ import { fetchCampsites, fetchComments, fetchPromotions,
 import Reservation from './ReservationComponent';
 import Favorites from './FavoritesComponent';
 import Login from './LoginComponent';
+import NetInfo from '@react-native-community/netinfo';
+
 
 
 
@@ -325,6 +327,46 @@ class Main extends Component {
         this.props.fetchComments();
         this.props.fetchPromotions();
         this.props.fetchPartners();
+
+        //fetch method of netinfo library, returns projmise that resolves to netinfo state object//
+        //use then method//
+        //take syntax right from documentation//
+        NetInfo.fetch().then(connectionInfo => {
+            (Platform.OS === 'ios') //checks type of platform OS, if ios, shows alert since no API for ios. if Android, uses ToastAndroid API//
+                ? Alert.alert('Initial Network Connectivity Type:', connectionInfo.type)
+                : ToastAndroid.show('Initial Network Connectivity Type: ' +
+                    connectionInfo.type, ToastAndroid.LONG); //how long to show Toast, short=2 seconds, long=3.5 seconds//
+        });
+        //using this keyword because creating method on parent class. call NetInfo.addeventListener, callback function, has access to netinfo state object as an argument, pass in as connectionInfo//
+        //call another class method (this.handleConnectivityChange) and pass in connectionInfo//
+        this.unsubscribeNetInfo = NetInfo.addEventListener(connectionInfo => {
+            this.handleConnectivityChange(connectionInfo);
+        });
+    }
+    //call this.unsubscribeNetInfo method when main component unmounts//
+    componentWillUnmount() {
+        this.unsubscribeNetInfo();
+    }
+    //call handleConnectivityChange 
+    handleConnectivityChange = connectionInfo => {
+        let connectionMsg = 'You are now connected to an active network.'; //initialize to string//
+        switch (connectionInfo.type) { //switch statement, takes connectionInfo type property//
+            case 'none':
+                connectionMsg = 'No network connection is active.';
+                break;
+            case 'unknown':
+                connectionMsg = 'The network connection state is now unknown.';
+                break;
+            case 'cellular':
+                connectionMsg = 'You are now connected to a cellular network.';
+                break;
+            case 'wifi':
+                connectionMsg = 'You are now connected to a WiFi network.';
+                break;
+        } //if platform is the IOS, then send alert that connection changed w/ msg, otherwise Toast for Android//
+        (Platform.OS === 'ios')
+            ? Alert.alert('Connection change:', connectionMsg)
+            : ToastAndroid.show(connectionMsg, ToastAndroid.LONG);
     }
     
     render() {
