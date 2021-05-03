@@ -327,26 +327,26 @@ class Main extends Component {
         this.props.fetchComments();
         this.props.fetchPromotions();
         this.props.fetchPartners();
+        this.showNetInfo();
 
-        //fetch method of netinfo library, returns projmise that resolves to netinfo state object//
-        //use then method//
-        //take syntax right from documentation//
-        NetInfo.fetch().then(connectionInfo => {
-            (Platform.OS === 'ios') //checks type of platform OS, if ios, shows alert since no API for ios. if Android, uses ToastAndroid API//
-                ? Alert.alert('Initial Network Connectivity Type:', connectionInfo.type)
-                : ToastAndroid.show('Initial Network Connectivity Type: ' +
-                    connectionInfo.type, ToastAndroid.LONG); //how long to show Toast, short=2 seconds, long=3.5 seconds//
-        });
-        //using this keyword because creating method on parent class. call NetInfo.addeventListener, callback function, has access to netinfo state object as an argument, pass in as connectionInfo//
-        //call another class method (this.handleConnectivityChange) and pass in connectionInfo//
         this.unsubscribeNetInfo = NetInfo.addEventListener(connectionInfo => {
             this.handleConnectivityChange(connectionInfo);
         });
     }
+
+    showNetInfo = async () => {
+        const connectionInfo = await NetInfo.fetch();
+        (Platform.OS === 'ios') //checks type of platform OS, if ios, shows alert since no API for ios. if Android, uses ToastAndroid API//
+                ? Alert.alert('Initial Network Connectivity Type:', connectionInfo.type)
+                : ToastAndroid.show('Initial Network Connectivity Type: ' +
+                    connectionInfo.type, ToastAndroid.LONG); //how long to show Toast, short=2 seconds, long=3.5 seconds//
+    }
+    
     //call this.unsubscribeNetInfo method when main component unmounts//
     componentWillUnmount() {
         this.unsubscribeNetInfo();
     }
+    
     //call handleConnectivityChange 
     handleConnectivityChange = connectionInfo => {
         let connectionMsg = 'You are now connected to an active network.'; //initialize to string//
